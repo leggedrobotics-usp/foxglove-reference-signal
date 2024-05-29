@@ -1,11 +1,11 @@
 {
   "name": "foxglove-reference-signal",
   "displayName": "foxglove-reference-signal",
-  "description": "",
-  "publisher": "unknown",
-  "homepage": "",
-  "version": "0.0.0",
-  "license": "UNLICENSED",
+  "description": "A companion Foxglove extension for the reference_signal_generator ROS2 package",
+  "publisher": "leggedrobotics-usp",
+  "homepage": "https://github.com/leggedrobotics-usp/foxglove-reference-signal",
+  "version": "0.0.1",
+  "license": "MIT",
   "main": "./dist/extension.js",
   "keywords": [],
   "scripts": {
