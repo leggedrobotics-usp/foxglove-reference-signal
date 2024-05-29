@@ -75,28 +75,17 @@ npm run local-install
 
 ## 🎈 Usage <a name="usage"></a>
 
-<!-- Each instance of **foxglove-reference-signal** binds to a user-specified topic and creates multiple services for starting and stopping several different types of reference signals. Default topic name is **/reference_signal** and user can specify through command-line as follows:
+After installing the extension, add it to your Foxglove layout. Ensure at least one instance of **reference_signal_generator** is running on your ROS2 network. Then, simply choose the topic to publish, the type of signal, the publish rate (rate at which the node will advertise to the topic) and the total signal time (or leave blank for an infinite signal). Use the *Signal parameters* panel to customize the parameters for each signal type.
 
-```bash
-ros2 run foxglove-reference-signal foxglove-reference-signal --ros-args -p topic_name:=<your_topic_name>
-```
+The panel itself is meant to be simple and small, so that it takes up little space on the layout. It only has two buttons, "Start" and "Stop". An example is shown below, together with a plot panel that shows the signal generated using the extension and the companion ROS2 package.
 
-After starting the generator node, multiple services will be created to start and stop the reference signals. Use ``ros2 topic list`` to check them out. You must see:
-
-- ``/<your_topic_name>/chirp`` Chirp (frequency-swept cosine)
-- ``/<your_topic_name>/ramp`` Ramp
-- ``/<your_topic_name>/sawtooth`` Rising-ramp sawtooth wave
-- ``/<your_topic_name>/sine`` Sine wave
-- ``/<your_topic_name>/square`` Square wave
-- ``/<your_topic_name>/step`` Step
-- ``/<your_topic_name>/triangle`` Triangle wave
-- ``/<your_topic_name>/stop`` Used to stop a signal created by other service before its *total_time*
-
-See [reference_signal_srvs](https://github.com/leggedrobotics-usp/reference_signal_srvs) for more details on each type of reference signal. -->
+![img](./img/preview.png)
 
 ## 🔋 Feature requests <a name="feature_requests"></a>
 
-Want another type of reference signal? Open an *Enhancement* issue describing it.
+Want something more on the interface? Open an *Enhancement* issue describing it.
+
+If what you need is another type of reference signal, please open the issue on the [reference_signal_generator](https://github.com/leggedrobotics-usp/reference_signal_generator) repo.
 
 ## 🤝 Contributing <a name="contributing"></a>
 
