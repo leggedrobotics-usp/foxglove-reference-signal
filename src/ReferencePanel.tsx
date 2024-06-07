@@ -89,7 +89,7 @@ function ReferencePanel({ context }: { context: PanelExtensionContext }): JSX.El
         initial_value: config.paths.map(path => path.initialValue),
         final_value: config.paths.map(path => path.finalValue),
         start_time: config.paths.map(path => path.startTime),
-        end_time: config.paths.map(path => path.endTime),
+        end_time: config.paths.map(path => path.endTime != undefined ? path.endTime : Infinity),
         slope: config.paths.map(path => path.slope),
         offset: config.paths.map(path => path.offset),
         amplitude: config.paths.map(path => path.amplitude),
@@ -99,7 +99,7 @@ function ReferencePanel({ context }: { context: PanelExtensionContext }): JSX.El
         target_frequency: config.paths.map(path => path.targetFrequency),
         target_time: config.paths.map(path => path.targetTime),
         publish_rate: config.publishRate,
-        total_time: config.totalTime != undefined? config.totalTime : Infinity,
+        total_time: config.totalTime != undefined ? config.totalTime : Infinity,
       }
     )
   }, [config, context]);
