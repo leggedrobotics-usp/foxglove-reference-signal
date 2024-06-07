@@ -83,7 +83,7 @@ function ReferencePanel({ context }: { context: PanelExtensionContext }): JSX.El
   const startPublishing = useCallback(async () => {
     await context.callService?.(
       // Service name is standardized as topic name + /setup
-      config.topicName + "/setup",
+      config.topicName + "/start",
       {
         signal_type: config.paths.map(path => path.signalType),
         initial_value: config.paths.map(path => path.initialValue),
@@ -101,10 +101,6 @@ function ReferencePanel({ context }: { context: PanelExtensionContext }): JSX.El
         publish_rate: config.publishRate,
         total_time: config.totalTime != undefined? config.totalTime : Infinity,
       }
-    )
-    await context.callService?.(
-      config.topicName + "/start",
-      {}
     )
   }, [config, context]);
 
