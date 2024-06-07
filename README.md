@@ -30,12 +30,12 @@
 - [Author](#author)
 
 ## 🧐 About <a name = "about"></a>
-Sending a reference signal to your own control system in ROS2 has never been so simple. **foxglove-reference-signal** creates a compact [Foxglove](https://foxglove.dev/) panel with *Start* and *Stop* buttons for easily triggering the signal. With this extension, you can simultaneously send references to multiple systems or DOFs of a single system.
+Sending a reference signal to your own control system in ROS2 has never been so simple! **foxglove-reference-signal** creates a compact [Foxglove](https://foxglove.dev/) panel with *Start* and *Stop* buttons for easily triggering the signal. With this extension, you can simultaneously send synchronized references to multiple systems or DOFs of a single system.
 
 **foxglove-reference-signal** works as a companion extension for the [reference_signal_generator](https://github.com/leggedrobotics-usp/reference_signal_generator) ROS2 package, ensuring the best of both worlds:
 
 - The simplicity and flexibility of Foxglove as the graphical user interface for your control system, responsible only for triggering the reference signal;
-- The determinism and robustness of a ROS2 node, that is in charge of publishing the reference signal at the specified rate.
+- The determinism and robustness of a ROS2 node, that is in charge of publishing all reference signals at the specified rate.
 
 ## 🏁 Getting Started <a name = "getting_started"></a>
 This repo is a standard Foxglove extension, built according to the [create-foxglove-extension](https://github.com/foxglove/create-foxglove-extension) standard.
@@ -75,7 +75,7 @@ npm run local-install
 
 ## 🎈 Usage <a name="usage"></a>
 
-After installing the extension, add it to your Foxglove layout. Ensure at least one instance of **reference_signal_generator** is running on your ROS2 network. Then, simply choose the topic to publish, the type of signal, the publish rate (rate at which the node will advertise to the topic) and the total signal time (or leave blank for an infinite signal). Use the *Signal parameters* panel to customize the parameters for each signal type.
+After installing the extension, add it to your Foxglove layout. Ensure at least one instance of **reference_signal_generator** is running on your ROS2 network. Then, simply choose the topic to publish, the publish rate (rate at which the node will advertise to the topic) and the total signal time (or leave blank for an infinite signal). Use the *Signals* panel to add multiple synchronized input signals and customize the parameters for each signal type.
 
 The panel itself is meant to be simple and small, so that it takes up little space on the layout. It only has two buttons, "Start" and "Stop". An example is shown below, together with a plot panel that shows the signal generated using the extension and the companion ROS2 package.
 
