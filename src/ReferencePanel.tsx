@@ -79,12 +79,13 @@ function ReferencePanel({ context }: { context: PanelExtensionContext }): JSX.El
     context.setDefaultPanelTitle(`Reference Signal`);
   }, [config, context]);
 
-  // Callback for the "Start" button. Triggers the corresponding service according to the chosen signal type
+  // Callback for the "Start" button. Triggers the corresponding service
   const startPublishing = useCallback(async () => {
     await context.callService?.(
-      // Service name is standardized as topic name + /setup
+      // Service name is standardized as topic name + /start
       config.topicName + "/start",
       {
+        // Build the service call using each signal defined using the interface
         signal_type: config.paths.map(path => path.signalType),
         initial_value: config.paths.map(path => path.initialValue),
         final_value: config.paths.map(path => path.finalValue),
@@ -98,6 +99,7 @@ function ReferencePanel({ context }: { context: PanelExtensionContext }): JSX.El
         initial_frequency: config.paths.map(path => path.initialFrequency),
         target_frequency: config.paths.map(path => path.targetFrequency),
         target_time: config.paths.map(path => path.targetTime),
+        // General parameters
         publish_rate: config.publishRate,
         total_time: config.totalTime != undefined ? config.totalTime : Infinity,
       }

@@ -1,8 +1,9 @@
 import { Topic, SettingsTreeNode, SettingsTreeNodes, SettingsTreeFields, SettingsTreeAction } from "@foxglove/extension";
 import memoizeWeak from "memoize-weak"
 import { produce } from "immer";
-import * as _ from "lodash-es";
+import _ from "lodash-es";
 
+// Parameters for each reference signal input
 export type Path = {
     signalType: string;
     initialValue: number;
@@ -19,6 +20,7 @@ export type Path = {
     targetTime: number;
 };
 
+// Default parameters for Path
 export const DEFAULT_PATH: Path = Object.freeze({
     signalType: "step",
     initialValue: 0,
@@ -35,6 +37,7 @@ export const DEFAULT_PATH: Path = Object.freeze({
     targetTime: 1,
 });
 
+// Complete configuration (includes topic name, publish rate and total time)
 export type Config = {
     topicName: string;
     publishRate: number;
@@ -42,6 +45,7 @@ export type Config = {
     paths: Path[];
 };
 
+// The settingsActionReducer responds to user interaction with the settings tree
 export function settingsActionReducer(prevConfig: Config, action: SettingsTreeAction): Config {
     return produce(prevConfig, (draft) => {
         if (action.action === "update") {
@@ -65,180 +69,178 @@ export function settingsActionReducer(prevConfig: Config, action: SettingsTreeAc
     });
 }
 
-const makeSignalNode = memoizeWeak(
-    (
-        index: number, path: Path, canDelete: boolean,
-    ): SettingsTreeNode => {
-        return {
-            actions: canDelete
-                ? [
-                    {
-                        type: "action",
-                        id: "delete-signal",
-                        label: "Delete signal",
-                        display: "inline",
-                        icon: "Clear",
-                    },
-                ] : [],
-            label: `Signal ${index + 1}`,
-            fields: {
-                signalType: {
-                    label: "Signal type",
-                    input: "select",
-                    value: path.signalType,
-                    options: [
-                        {
-                            label: "Step",
-                            value: "step",
-                        },
-                        {
-                            label: "Ramp",
-                            value: "ramp",
-                        },
-                        {
-                            label: "Sine",
-                            value: "sine",
-                        },
-                        {
-                            label: "Square",
-                            value: "square",
-                        },
-                        {
-                            label: "Triangle",
-                            value: "triangle",
-                        },
-                        {
-                            label: "Sawtooth",
-                            value: "sawtooth",
-                        },
-                        {
-                            label: "Chirp",
-                            value: "chirp",
-                        },
-                    ],
+// Build a settings tree node for a single reference signal (1-DOF)
+const makeSignalNode = memoizeWeak((index: number, path: Path, canDelete: boolean): SettingsTreeNode => {
+    return {
+        actions: canDelete
+            ? [
+                {
+                    type: "action",
+                    id: "delete-signal",
+                    label: "Delete signal",
+                    display: "inline",
+                    icon: "Clear",
                 },
-                initialValue:
-                    // Initial value: applicable to "step" and "ramp" signals
-                    // Signal value from t = 0 to t = start_time
-                    ["step", "ramp"].includes(path.signalType)
-                    ? {
-                        label: "Initial value",
-                        input: "number",
-                        value: path.initialValue,
-                    } : undefined,
-                finalValue:
-                    // Final value: applicable to "step" signals only
-                    // Signal value from t = start_time to t = end_time
-                    path.signalType === "step"
-                    ? {
-                        label: "Final value",
-                        input: "number",
-                        value: path.finalValue,
-                    } : undefined,
-                startTime:
-                    // Start time: applicable to all signals
-                    // Step: time at which value changes from initial_value to final_value
-                    // Ramp: time at which value starts changing from initial_value according to slope
-                    // Other waveforms: time at which the waveform starts
+            ] : [],
+        label: `Signal ${index + 1}`,
+        fields: {
+            signalType: {
+                label: "Signal type",
+                input: "select",
+                value: path.signalType,
+                options: [
                     {
-                        label: "Start time (s)",
-                        input: "number",
-                        value: path.startTime,
-                        min: 0,
+                        label: "Step",
+                        value: "step",
                     },
-                endTime:
-                    // End time: applicable to all signals
-                    // Step: time at which value changes from final_value back to initial_value
-                    // Ramp: time at which value stops changing according to slope
-                    // Other waveforms: time at which the waveform stops
                     {
-                        label: "End time (s)",
-                        input: "number",
-                        value: path.endTime != undefined ? path.endTime : Infinity,
-                        min: 0,
-                        placeholder: "inf",
+                        label: "Ramp",
+                        value: "ramp",
                     },
-                slope:
-                    // Slope: applicable to "ramp" signals only
-                    // Rate at which the output value changes, starting from initial_value
-                    path.signalType === "ramp"
-                    ? {
-                        label: "Slope",
-                        input: "number",
-                        value: path.slope,
-                    } : undefined,
-                offset:
-                    // Offset: applicable to waveform (sine, square, triangle, sawtooth, chirp) signals only
-                    // DC offset of the waveform
-                    ["sine", "square", "triangle", "sawtooth", "chirp"].includes(path.signalType)
-                    ? {
-                        label: "Offset",
-                        input: "number",
-                        value: path.offset,
-                    } : undefined,
-                amplitude:
-                    // Amplitude: applicable to waveform (sine, square, triangle, sawtooth, chirp) signals only
-                    // Total amplitude of the waveform
-                    ["sine", "square", "triangle", "sawtooth", "chirp"].includes(path.signalType)
-                    ? {
-                        label: "Amplitude",
-                        input: "number",
-                        value: path.amplitude,
-                    } : undefined,
-                frequency:
-                    // Frequency: applicable to waveform (sine, square, triangle, sawtooth) signals only
-                    // Frequency of the waveform
-                    ["sine", "square", "triangle", "sawtooth"].includes(path.signalType)
-                    ? {
-                        label: "Frequency (Hz)",
-                        input: "number",
-                        value: path.frequency,
-                        min: 0,
-                    } : undefined,
-                phase:
-                    // Phase: applicable to waveform (sine, square, triangle, sawtooth, chirp) signals only
-                    // Phase shift of the waveform
-                    ["sine", "square", "triangle", "sawtooth", "chirp"].includes(path.signalType)
-                    ? {
-                        label: "Phase (deg)",
-                        input: "number",
-                        value: path.phase,
-                    } : undefined,
-                initialFrequency:
-                    // Initial frequency: applicable to chirp (frequency-swept cosine) signals only
-                    // Frequency at t = start_time
-                    path.signalType === "chirp"
-                    ? {
-                        label: "Initial frequency (Hz)",
-                        input: "number",
-                        value: path.initialFrequency,
-                        min: 0,
-                    } : undefined,
-                targetFrequency:
-                    // Target frequency: applicable to chirp (frequency-swept cosine) signals only
-                    // Frequency at t = target_time
-                    path.signalType === "chirp"
-                    ? {
-                        label: "Target frequency (Hz)",
-                        input: "number",
-                        value: path.targetFrequency,
-                        min: 0,
-                    } : undefined,
-                targetTime:
-                    // Target time: applicable to chirp (frequency-swept cosine) signals only
-                    // Time at which the frequency reaches target_frequency
-                    path.signalType === "chirp"
-                    ? {
-                        label: "Target time (s)",
-                        input: "number",
-                        value: path.targetTime,
-                        min: 0,
-                    } : undefined,
+                    {
+                        label: "Sine",
+                        value: "sine",
+                    },
+                    {
+                        label: "Square",
+                        value: "square",
+                    },
+                    {
+                        label: "Triangle",
+                        value: "triangle",
+                    },
+                    {
+                        label: "Sawtooth",
+                        value: "sawtooth",
+                    },
+                    {
+                        label: "Chirp",
+                        value: "chirp",
+                    },
+                ],
             },
+            initialValue:
+                // Initial value: applicable to "step" and "ramp" signals
+                // Signal value from t = 0 to t = start_time
+                ["step", "ramp"].includes(path.signalType)
+                ? {
+                    label: "Initial value",
+                    input: "number",
+                    value: path.initialValue,
+                } : undefined,
+            finalValue:
+                // Final value: applicable to "step" signals only
+                // Signal value from t = start_time to t = end_time
+                path.signalType === "step"
+                ? {
+                    label: "Final value",
+                    input: "number",
+                    value: path.finalValue,
+                } : undefined,
+            startTime:
+                // Start time: applicable to all signals
+                // Step: time at which value changes from initial_value to final_value
+                // Ramp: time at which value starts changing from initial_value according to slope
+                // Other waveforms: time at which the waveform starts
+                {
+                    label: "Start time (s)",
+                    input: "number",
+                    value: path.startTime,
+                    min: 0,
+                },
+            endTime:
+                // End time: applicable to all signals
+                // Step: time at which value changes from final_value back to initial_value
+                // Ramp: time at which value stops changing according to slope
+                // Other waveforms: time at which the waveform stops
+                {
+                    label: "End time (s)",
+                    input: "number",
+                    value: path.endTime != undefined ? path.endTime : Infinity,
+                    min: 0,
+                    placeholder: "inf",
+                },
+            slope:
+                // Slope: applicable to "ramp" signals only
+                // Rate at which the output value changes, starting from initial_value
+                path.signalType === "ramp"
+                ? {
+                    label: "Slope",
+                    input: "number",
+                    value: path.slope,
+                } : undefined,
+            offset:
+                // Offset: applicable to waveform (sine, square, triangle, sawtooth, chirp) signals only
+                // DC offset of the waveform
+                ["sine", "square", "triangle", "sawtooth", "chirp"].includes(path.signalType)
+                ? {
+                    label: "Offset",
+                    input: "number",
+                    value: path.offset,
+                } : undefined,
+            amplitude:
+                // Amplitude: applicable to waveform (sine, square, triangle, sawtooth, chirp) signals only
+                // Total amplitude of the waveform
+                ["sine", "square", "triangle", "sawtooth", "chirp"].includes(path.signalType)
+                ? {
+                    label: "Amplitude",
+                    input: "number",
+                    value: path.amplitude,
+                } : undefined,
+            frequency:
+                // Frequency: applicable to waveform (sine, square, triangle, sawtooth) signals only
+                // Frequency of the waveform
+                ["sine", "square", "triangle", "sawtooth"].includes(path.signalType)
+                ? {
+                    label: "Frequency (Hz)",
+                    input: "number",
+                    value: path.frequency,
+                    min: 0,
+                } : undefined,
+            phase:
+                // Phase: applicable to waveform (sine, square, triangle, sawtooth, chirp) signals only
+                // Phase shift of the waveform
+                ["sine", "square", "triangle", "sawtooth", "chirp"].includes(path.signalType)
+                ? {
+                    label: "Phase (deg)",
+                    input: "number",
+                    value: path.phase,
+                } : undefined,
+            initialFrequency:
+                // Initial frequency: applicable to chirp (frequency-swept cosine) signals only
+                // Frequency at t = start_time
+                path.signalType === "chirp"
+                ? {
+                    label: "Initial frequency (Hz)",
+                    input: "number",
+                    value: path.initialFrequency,
+                    min: 0,
+                } : undefined,
+            targetFrequency:
+                // Target frequency: applicable to chirp (frequency-swept cosine) signals only
+                // Frequency at t = target_time
+                path.signalType === "chirp"
+                ? {
+                    label: "Target frequency (Hz)",
+                    input: "number",
+                    value: path.targetFrequency,
+                    min: 0,
+                } : undefined,
+            targetTime:
+                // Target time: applicable to chirp (frequency-swept cosine) signals only
+                // Time at which the frequency reaches target_frequency
+                path.signalType === "chirp"
+                ? {
+                    label: "Target time (s)",
+                    input: "number",
+                    value: path.targetTime,
+                    min: 0,
+                } : undefined,
         }
-    },
-);
+    }
+});
 
+// Build the top-level signal tree (enabling user to add and remove DOFs)
 const makeRootSignalNode = memoizeWeak((paths: Path[]): SettingsTreeNode => {
     const children = Object.fromEntries(
         paths.length === 0
@@ -265,6 +267,7 @@ const makeRootSignalNode = memoizeWeak((paths: Path[]): SettingsTreeNode => {
     };
 });
 
+// Build the complete settings tree
 export function buildSettingsTree(config: Config, topics?: readonly Topic[]): SettingsTreeNodes {
     // General fields (applicable to all signal types)
     const generalFields: SettingsTreeFields = {
