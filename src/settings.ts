@@ -98,6 +98,10 @@ const makeSignalNode = memoizeWeak((index: number, path: Path, canDelete: boolea
                         value: "ramp",
                     },
                     {
+                        label: "Spline",
+                        value: "spline",
+                    },
+                    {
                         label: "Sine",
                         value: "sine",
                     },
@@ -120,18 +124,18 @@ const makeSignalNode = memoizeWeak((index: number, path: Path, canDelete: boolea
                 ],
             },
             initialValue:
-                // Initial value: applicable to "step" and "ramp" signals
+                // Initial value: applicable to "step", "ramp" and "spline" signals
                 // Signal value from t = 0 to t = start_time
-                ["step", "ramp"].includes(path.signalType)
+                ["step", "ramp", "spline"].includes(path.signalType)
                 ? {
                     label: "Initial value",
                     input: "number",
                     value: path.initialValue,
                 } : undefined,
             finalValue:
-                // Final value: applicable to "step" signals only
+                // Final value: applicable to "step" and "spline" signals
                 // Signal value from t = start_time to t = end_time
-                path.signalType === "step"
+                ["step", "spline"].includes(path.signalType)
                 ? {
                     label: "Final value",
                     input: "number",
