@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useState, useCallback } from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash-es"
 
-import { Config, buildSettingsTree, settingsActionReducer } from "./settings";
+import { Config, buildSettingsTree, settingsActionReducer, DEFAULT_PATH } from "./settings";
 
 function ReferencePanel({ context }: { context: PanelExtensionContext }): JSX.Element {
   const [topics, setTopics] = useState<undefined | Immutable<Topic[]>>();
@@ -14,20 +14,9 @@ function ReferencePanel({ context }: { context: PanelExtensionContext }): JSX.El
   const [config, setConfig] = useState<Config>(() => {
     const partialConfig = context.initialState as Partial<Config>;
     partialConfig.topicName ??= "";
-    partialConfig.signalType ??= "step";
-    partialConfig.initialValue ??= 0;
-    partialConfig.finalValue ??= 1;
-    partialConfig.stepTime ??= 0;
-    partialConfig.slope ??= 1;
-    partialConfig.startTime ??= 0;
-    partialConfig.offset ??= 0;
-    partialConfig.amplitude ??= 1;
-    partialConfig.frequency ??= 1;
-    partialConfig.initialFrequency ??= 0;
-    partialConfig.targetFrequency ??= 1;
-    partialConfig.targetTime ??= 1;
     partialConfig.publishRate ??= 1;
     partialConfig.totalTime ??= Infinity;
+    partialConfig.paths ??= [DEFAULT_PATH];
     return partialConfig as Config;
   });
 
@@ -87,53 +76,34 @@ function ReferencePanel({ context }: { context: PanelExtensionContext }): JSX.El
   // Save config and update default panel title
   useEffect(() => {
     context.saveState(config);
-    context.setDefaultPanelTitle(`Reference Signal (${config.signalType})`);
+    context.setDefaultPanelTitle(`Reference Signal`);
   }, [config, context]);
 
-  // Callback for the "Start" button. Triggers the corresponding service according to the chosen signal type
+  // Callback for the "Start" button. Triggers the corresponding service
   const startPublishing = useCallback(async () => {
     await context.callService?.(
-      // Service name is standardized as topic name + / + signal type
-      config.topicName + "/" + config.signalType,
-      // Checks if signal type is "step" and builds the service call arguments accordingly
-      config.signalType === "step"
-      ? {
-        initial_value: config.initialValue,
-        final_value: config.finalValue,
-        step_time: config.stepTime,
+      // Service name is standardized as topic name + /start
+      config.topicName + "/start",
+      {
+        // Build the service call using each signal defined using the interface
+        signal_type: config.paths.map(path => path.signalType),
+        initial_value: config.paths.map(path => path.initialValue),
+        final_value: config.paths.map(path => path.finalValue),
+        start_time: config.paths.map(path => path.startTime),
+        end_time: config.paths.map(path => path.endTime != undefined ? path.endTime : Infinity),
+        slope: config.paths.map(path => path.slope),
+        offset: config.paths.map(path => path.offset),
+        amplitude: config.paths.map(path => path.amplitude),
+        frequency: config.paths.map(path => path.frequency),
+        phase: config.paths.map(path => path.phase),
+        initial_frequency: config.paths.map(path => path.initialFrequency),
+        target_frequency: config.paths.map(path => path.targetFrequency),
+        target_time: config.paths.map(path => path.targetTime),
+        // General parameters
         publish_rate: config.publishRate,
-        total_time: config.totalTime != undefined ? config.totalTime : Infinity
-      } : 
-      // Checks if signal type is "ramp" and builds the service call arguments accordingly
-      config.signalType === "ramp"
-      ? {
-        initial_value: config.initialValue,
-        slope: config.slope,
-        start_time: config.startTime,
-        publish_rate: config.publishRate,
-        total_time: config.totalTime != undefined ? config.totalTime : Infinity
-      } :
-      // Checks if signal type is a waveform (sine, square, triangle or sawtooth) and builds the service call arguments accordingly
-      ["sine", "square", "triangle", "sawtooth"].includes(config.signalType)
-      ? {
-        offset: config.offset,
-        amplitude: config.amplitude,
-        frequency: config.frequency,
-        publish_rate: config.publishRate,
-        total_time: config.totalTime != undefined ? config.totalTime : Infinity
-      } :
-      // Checks if signal type is "chirp" (frequency-swept cosine) and builds the service call arguments accordingly
-      config.signalType === "chirp"
-      ? {
-        offset: config.offset,
-        amplitude: config.amplitude,
-        initial_frequency: config.initialFrequency,
-        target_frequency: config.targetFrequency,
-        target_time: config.targetTime,
-        publish_rate: config.publishRate,
-        total_time: config.totalTime != undefined ? config.totalTime : Infinity
-      } : {}
-    );
+        total_time: config.totalTime != undefined ? config.totalTime : Infinity,
+      }
+    )
   }, [config, context]);
 
   // Callback for the "Stop" button. Triggers the corresponding service, that simply stops publishing the reference signal
